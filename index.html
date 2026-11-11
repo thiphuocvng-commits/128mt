@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 GIẢI MÃ MẬT MÃ — HÓA 12: POLYMER & VẬT LIỆU POLYMER</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- KaTeX for Chemistry & Math formulas -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Mammoth.js for Word (.docx) import -->
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+
+  <!-- Font & Custom Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --theme-color: #f5c542;
+      --theme-color-dark: #d4a017;
+      --theme-color-light: #fff3c4;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+
+    /* Prevent latex math breaking standard text formatting */
+    .katex-nowrap .katex {
+      white-space: nowrap;
+    }
+
+    /* Target specific top border colors for 8 questions dynamically */
+    .card-border-0 { border-top-color: #ef4444; }
+    .card-border-1 { border-top-color: #f97316; }
+    .card-border-2 { border-top-color: #eab308; }
+    .card-border-3 { border-top-color: #10b981; }
+    .card-border-4 { border-top-color: #06b6d4; }
+    .card-border-5 { border-top-color: #3b82f6; }
+    .card-border-6 { border-top-color: #6366f1; }
+    .card-border-7 { border-top-color: #a855f7; }
+
+    /* Custom scrollbar for panel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    /* Matrix Block Grid Styling */
+    .digit-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      padding: 6px;
+      background: #0f172a;
+      border-radius: 8px;
+    }
+    .grid-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      user-select: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: #1e293b;
+      color: #94a3b8;
+    }
+    .grid-cell:hover:not(.locked-cell):not(.found-cell) {
+      background: #334155;
+      color: #f8fafc;
+    }
+    .grid-cell.found-cell {
+      background-color: var(--theme-color) !important;
+      color: #0f172a !important;
+      font-weight: 900;
+      box-shadow: 0 0 8px var(--theme-color);
+    }
+    .grid-cell.locked-cell {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+
+    /* Print styling specifically targeting A3 landscape single page */
+    @media print {
+      @page {
+        size: A3 landscape;
+        margin: 10mm;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+        font-size: 11px;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-page-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        height: 100vh !important;
+        box-sizing: border-box !important;
+      }
+      .print-header {
+        background: none !important;
+        color: black !important;
+        border-bottom: 2px solid #000 !important;
+        padding: 4px 0 !important;
+        margin-bottom: 8px !important;
+      }
+      .print-questions-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px !important;
+      }
+      .print-question-card {
+        border: 1px solid #ccc !important;
+        border-top-width: 4px !important;
+        padding: 6px !important;
+        background: white !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+      }
+      .print-blocks-row {
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        margin-top: 10px !important;
+      }
+      .print-block-item {
+        flex: 1 !important;
+        border: 1px solid #999 !important;
+        padding: 4px !important;
+        border-radius: 4px !important;
+      }
+      .digit-grid {
+        gap: 1px !important;
+        padding: 2px !important;
+        background: #eee !important;
+      }
+      .grid-cell {
+        font-size: 8px !important;
+        background: #fff !important;
+        color: #333 !important;
+        border: 1px solid #ddd !important;
+      }
+      .grid-cell.found-cell {
+        background-color: var(--theme-color) !important;
+        border-color: #000 !important;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body class="p-2 sm:p-4 md:p-6">
+
+  <div class="max-w-7xl mx-auto print-page-wrapper">
+    
+    <!-- 1. ĐẦU TRANG -->
+    <header class="print-header bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-6 mb-4 shadow-xl border-b-4 border-amber-400">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <span class="inline-block px-3 py-1 bg-amber-400 text-slate-950 font-bold rounded-full text-xs uppercase tracking-wider mb-2" id="topicBadge">
+            CHỦ ĐỀ: POLYMER & VẬT LIỆU POLYMER
+          </span>
+          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500" id="sheetTitleDisplay">
+            🔐 GIẢI MÃ MẬT MÃ — HÓA 12
+          </h1>
+          <p class="text-slate-300 text-xs sm:text-sm mt-1">
+            Chất dẻo & Vật liệu composite — Trắc nghiệm tương tác khám phá mật mã bí ẩn
+          </p>
+        </div>
+
+        <!-- Ô NHẬP THÔNG TIN HỌC SINH -->
+        <div class="flex flex-col sm:flex-row gap-3 bg-white/10 p-3 rounded-xl backdrop-blur-md border border-white/10 min-w-[280px]">
+          <div class="flex-1">
+            <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Họ và tên học sinh</label>
+            <input type="text" id="studentName" placeholder="Nhập họ tên..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+          </div>
+          <div class="w-full sm:w-28">
+            <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Lớp</label>
+            <input type="text" id="studentClass" placeholder="12A..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. HỘP HƯỚNG DẪN -->
+    <div class="no-print bg-white/90 backdrop-blur rounded-xl p-3 sm:p-4 mb-4 border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs sm:text-sm text-slate-700">
+      <div class="flex items-center gap-2 text-amber-600 font-bold shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        HƯỚNG DẪN CHƠI:
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full">
+        <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+          <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">1</span>
+          <span>Trả lời <strong>ĐÚNG</strong> câu hỏi để mở khối chữ tương ứng.</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+          <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">2</span>
+          <span>Bấm đúng tất cả các ô chứa <strong>chữ giải mã</strong> trong khối.</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+          <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">3</span>
+          <span>Hoàn thành 8 khối để hiện bức thông điệp <strong>MẬT MÃ BÍ ẨN</strong>.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. THANH MẬT MÃ BÍ ẨN -->
+    <div class="bg-slate-900 text-white rounded-xl p-4 mb-6 shadow-md border border-slate-800">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-2">
+        <div class="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <span>PROGRESS</span>
+          <span id="passcodeProgressText" class="text-amber-400">(0/8 CHỮ SỐ MẬT MÃ)</span>
+        </div>
+        <div class="text-xs text-slate-400">Dạng nhóm: <strong class="text-slate-200">2 - 2 - 4</strong></div>
+      </div>
+      
+      <!-- Dãy ô chứa chữ số mật mã -->
+      <div class="flex items-center justify-center gap-1 sm:gap-3 py-1" id="passcodeSlotsContainer">
+        <!-- Generates 8 digit slots dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- 7. BANNER CHÚC MỪNG MẬT MÃ (Chỉ hiện khi giải hết 8 khối) -->
+    <div id="congratsBanner" class="hidden mb-6 bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-700 text-white p-6 rounded-2xl shadow-2xl border-4 border-amber-300 text-center animate-bounce">
+      <div class="text-xs uppercase tracking-widest font-extrabold text-amber-200 mb-1">🎉 XUẤT SẮC! BẠN ĐÃ GIẢI MÃ THÀNH CÔNG 🎉</div>
+      <div class="text-3xl sm:text-5xl font-black tracking-widest text-white drop-shadow-md my-2" id="finalPasscodeDisplay">
+        20 11 2026
+      </div>
+      <p class="text-sm sm:text-base text-emerald-100 font-medium">
+        Chúc mừng bạn đã chinh phục trọn vẹn thử thách Mật Mã Polymer! Hãy bấm "Nộp bài" để tổng kết điểm số.
+      </p>
+    </div>
+
+    <!-- MAIN CONTENT: GRID DUAL-COLUMN (CÂU HỎI & KHỐI CHỮ) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- 4. PHẦN A: CÂU HỎI TRẮC NGHIỆM (7 CỘT LG) -->
+      <section class="lg:col-span-7 flex flex-col gap-4" id="questionsContainer">
+        <!-- 8 Question Cards rendered via JS -->
+      </section>
+
+      <!-- 5. PHẦN B: KHỐI CHỮ CHỨA MẬT MÃ (5 CỘT LG) -->
+      <section class="lg:col-span-5 flex flex-col gap-4">
+        <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex items-center justify-between">
+          <h2 class="font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2">
+            <span>🧩 CÁC KHỐI CHỮ MẬT MÃ</span>
+          </h2>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-medium" id="blocksStatus">0/8 đã mở</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 print-blocks-row" id="matrixBlocksContainer">
+          <!-- 8 Matrix Blocks (5x7) rendered via JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- 6. HÀNG NÚT ĐIỀU KHIỂN -->
+    <div class="no-print mt-6 mb-6 flex flex-wrap items-center justify-center gap-3 bg-white/80 p-4 rounded-xl border border-slate-200 shadow-sm">
+      <button onclick="submitQuiz()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Nộp bài
+      </button>
+
+      <button onclick="resetGame()" class="px-5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-sm shadow transition transform hover:-translate-y-0.5 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        Làm lại
+      </button>
+
+      <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow transition transform hover:-translate-y-0.5 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+        In phiếu (A3)
+      </button>
+
+      <!-- Teacher Edit Panel Trigger Button -->
+      <button id="teacherPanelToggleBtn" onclick="toggleTeacherPanel()" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow transition transform hover:-translate-y-0.5 flex items-center gap-2 ml-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        Soạn đề (Giáo viên)
+      </button>
+    </div>
+
+    <!-- 8. BẢNG KẾT QUẢ VÀ LỜI GIẢI CHI TIẾT (Chỉ hiện khi nộp bài) -->
+    <div id="resultsSection" class="hidden mb-8 bg-white rounded-2xl p-6 border border-slate-200 shadow-xl">
+      <div class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">📊 BẢNG KẾT QUẢ ĐÁNH GIÁ</h2>
+          <p class="text-xs text-slate-500" id="resultStudentInfo">Học sinh: -- | Lớp: --</p>
+        </div>
+        <div class="bg-indigo-50 border border-indigo-100 px-6 py-3 rounded-2xl text-center">
+          <div class="text-xs uppercase font-extrabold text-indigo-500">ĐIỂM SỐ CỦA BẠN</div>
+          <div class="text-3xl font-black text-indigo-700" id="finalScoreDisplay">0 / 10</div>
+        </div>
+      </div>
+
+      <!-- Danh sách câu sai -->
+      <div class="mt-4">
+        <h3 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
+          <span>📝 CHI TIẾT CÁC CÂU HỎI XEM LẠI</span>
+        </h3>
+        <div id="wrongQuestionsList" class="space-y-3">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- End Wrapper -->
+
+  <!-- 4. PANEL SOẠN ĐỀ DÀNH CHO GIÁO VIÊN (HIDDEN BY DEFAULT / EXCLUDED IN STUDENT EXPORT) -->
+  <div id="teacherPanel" class="no-print fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex justify-end">
+    <div class="w-full max-w-3xl bg-white h-full overflow-y-auto p-6 shadow-2xl flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between border-b pb-4 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">🛠️ PANELS SOẠN ĐỀ & CÀI ĐẶT</h2>
+            <p class="text-xs text-slate-500">Chỉnh sửa nội dung, mật mã, màu sắc hoặc nhập từ Word</p>
+          </div>
+          <button onclick="toggleTeacherPanel()" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <!-- Cài đặt chung (Tiêu đề + Màu sắc) -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-4">
+          <h3 class="font-bold text-slate-800 text-sm uppercase">Cài đặt chung phiếu học tập</h3>
+          
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Tiêu đề phiếu</label>
+            <input type="text" id="editSheetTitle" class="w-full px-3 py-2 rounded-lg border text-sm" placeholder="🔐 GIẢI MÃ MẬT MÃ — HÓA 12">
+          </div>
+
+          <!-- Chọn màu tô khối -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Màu tô khối chữ (Theme Color)</label>
+            <div class="flex items-center gap-3">
+              <input type="color" id="editThemeColor" value="#f5c542" onchange="updateThemeColor(this.value)" class="w-10 h-10 rounded border cursor-pointer">
+              <div class="flex items-center gap-2">
+                <!-- 6 Màu mẫu -->
+                <button type="button" onclick="updateThemeColor('#f5c542')" class="w-7 h-7 rounded-full bg-[#f5c542] border border-slate-300 shadow-sm"></button>
+                <button type="button" onclick="updateThemeColor('#22c55e')" class="w-7 h-7 rounded-full bg-[#22c55e] border border-slate-300 shadow-sm"></button>
+                <button type="button" onclick="updateThemeColor('#ec4899')" class="w-7 h-7 rounded-full bg-[#ec4899] border border-slate-300 shadow-sm"></button>
+                <button type="button" onclick="updateThemeColor('#3b82f6')" class="w-7 h-7 rounded-full bg-[#3b82f6] border border-slate-300 shadow-sm"></button>
+                <button type="button" onclick="updateThemeColor('#a855f7')" class="w-7 h-7 rounded-full bg-[#a855f7] border border-slate-300 shadow-sm"></button>
+                <button type="button" onclick="updateThemeColor('#f97316')" class="w-7 h-7 rounded-full bg-[#f97316] border border-slate-300 shadow-sm"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tải file Word (.docx) -->
+        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6">
+          <h3 class="font-bold text-indigo-900 text-sm uppercase mb-1">📥 Nhập đề từ File Word (.docx)</h3>
+          <p class="text-xs text-indigo-700 mb-3">
+            Định dạng Word: "Câu 1:...", "A. ... B. ...", "Đáp án: A". Công thức KaTeX dạng $...$.
+          </p>
+          <input type="file" id="docxFileInput" accept=".docx" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+          <div id="docxNotice" class="text-xs mt-2 text-indigo-800 font-medium hidden"></div>
+        </div>
+
+        <!-- Chỉnh sửa danh sách 8 câu hỏi -->
+        <div class="space-y-4">
+          <h3 class="font-bold text-slate-800 text-sm uppercase">Danh sách 8 câu hỏi chi tiết</h3>
+          <div id="editorQuestionsList" class="space-y-6">
+            <!-- Questions edit form elements generated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions Footer -->
+      <div class="border-t pt-4 mt-6 flex flex-wrap items-center justify-between gap-3">
+        <button onclick="restoreDefaultData()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-200 text-slate-700 hover:bg-slate-300">
+          Khôi phục mặc định
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button onclick="exportStudentHTML()" class="px-4 py-2 rounded-lg text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 shadow">
+            📦 Xuất file cho HS
+          </button>
+          <button onclick="saveTeacherEdits()" class="px-6 py-2 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 shadow">
+            💾 Lưu đề
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* ==========================================================================
+       2. MẪU CHỮ SỐ 5x7 CHUẨN TRONG BÀI (0 - 9)
+       ========================================================================== */
+    const DIGIT_PATTERNS = {
+      '0': ["01110","10001","10001","10001","10001","10001","01110"],
+      '1': ["00100","01100","00100","00100","00100","00100","01110"],
+      '2': ["01110","10001","00001","00110","01000","10000","11111"],
+      '3': ["11111","00010","00100","00010","00001","10001","01110"],
+      '4': ["00010","00110","01010","10010","11111","00010","00010"],
+      '5': ["11111","10000","11110","00001","00001","10001","01110"],
+      '6': ["00110","01000","10000","11110","10001","10001","01110"],
+      '7': ["11111","00001","00010","00100","01000","01000","01000"],
+      '8': ["01110","10001","10001","01110","10001","10001","01110"],
+      '9': ["01110","10001","10001","01111","00001","00010","01100"]
+    };
+
+    /* ==========================================================================
+       DỮ LIỆU MẶC ĐỊNH CHỦ ĐỀ POLYMER & VẬT LIỆU POLYMER (HÓA 12)
+       ========================================================================== */
+    const DEFAULT_CONFIG = {
+      sheetTitle: "🔐 GIẢI MÃ MẬT MÃ — HÓA 12",
+      topic: "ĐẠI CƯƠNG VỀ POLYMER & VẬT LIỆU POLYMER",
+      themeColor: "#f5c542",
+      questions: [
+        {
+          id: 1,
+          question: "Polymer nào sau đây được điều chế bằng phản ứng trùng hợp?",
+          options: ["Poly(ethylene terephthalate)", "Poly(vinyl chloride)", "Nylon-6,6", "Polycaproamide (Nylon-6)"],
+          correct: 1, // B
+          decodeChar: "B",
+          passcodeDigit: "2",
+          weight: 1,
+          explanation: "Poly(vinyl chloride) (PVC) được điều chế trực tiếp từ phản ứng trùng hợp vinyl chloride CH2=CH-Cl."
+        },
+        {
+          id: 2,
+          question: "Ưu điểm vượt trội của vật liệu composite so với các polymer nền đơn chất là gì?",
+          options: ["Độ bền cao, nhẹ, chịu nhiệt và chịu lực tốt hơn", "Dễ hòa tan hoàn toàn trong các dung môi hữu cơ", "Có tính đàn hồi cao như cao su thiên nhiên", "Có khả năng dẫn điện tốt như kim loại"],
+          correct: 0, // A
+          decodeChar: "A",
+          passcodeDigit: "0",
+          weight: 1,
+          explanation: "Vật liệu composite kết hợp chất nền và chất gia cường (độn) giúp tăng độ bền cơ học, độ chịu nhiệt, chống ăn mòn mà vẫn nhẹ."
+        },
+        {
+          id: 3,
+          question: "Phản ứng thủy phân poly(vinyl acetate) trong dung dịch NaOH thuộc loại phản ứng nào của polymer?",
+          options: ["Phản ứng cắt mạch polymer", "Phản ứng tăng độ dài mạch polymer", "Phản ứng giữ nguyên mạch polymer", "Phản ứng khâu mạch polymer"],
+          correct: 2, // C
+          decodeChar: "C",
+          passcodeDigit: "1",
+          weight: 1,
+          explanation: "Thủy phân poly(vinyl acetate) biến đổi nhóm este $-OCOCH_3$ thành nhóm $-OH$ tạo poly(vinyl alcohol) mà số mắt xích (chiều dài mạch) không thay đổi."
+        },
+        {
+          id: 4,
+          question: "Vật liệu composite gồm hai thành phần chính nào sau đây?",
+          options: ["Chất nền và chất độn (chất gia cường)", "Chất dẻo và cao su", "Keo dán và keo gắn", "Kim loại và chất dẻo"],
+          correct: 0, // A
+          decodeChar: "A",
+          passcodeDigit: "1",
+          weight: 1,
+          explanation: "Vật liệu composite luôn gồm cốt (chất gia cường/chất độn) giúp phân bố lại ứng suất và nền (chất liên kết)."
+        },
+        {
+          id: 5,
+          question: "Phản ứng lưu hóa cao su bằng sulfur ($S$) tạo cấu trúc mạng không gian thuộc loại phản ứng nào của polymer?",
+          options: ["Phản ứng cắt mạch polymer", "Phản ứng giữ nguyên mạch polymer", "Phản ứng khâu mạch polymer", "Phản ứng phân hủy mạch polymer"],
+          correct: 2, // C
+          decodeChar: "C",
+          passcodeDigit: "2",
+          weight: 1,
+          explanation: "Phản ứng lưu hóa cao su tạo ra các cầu nối disulfite $-S-S-$ liên kết các mạch polymer đơn lẻ thành mạng lưới 3D, thuộc loại phản ứng khâu mạch polymer."
+        },
+        {
+          id: 6,
+          question: "Polymer nào có tính chất dẻo và được dùng để sản xuất màng mỏng, bọc dây điện?",
+          options: ["Polyethylene (PE)", "Poly(phenol-formaldehyde)", "Tơ capron", "Cao su buna-S"],
+          correct: 0, // A
+          decodeChar: "A",
+          passcodeDigit: "0",
+          weight: 1,
+          explanation: "Polyethylene (PE) có tính dẻo, cách điện tốt, không thấm nước nên dùng làm màng bao bọc và cách điện."
+        },
+        {
+          id: 7,
+          question: "Chất dẻo polystyrene (PS) được tổng hợp trực tiếp từ phản ứng trùng hợp monomer nào sau đây?",
+          options: ["$C_6H_5-CH=CH_2$", "$CH_2=CH-Cl$", "$CH_2=CH-CH_3$", "$CH_2=CH-COOCH_3$"],
+          correct: 0, // A
+          decodeChar: "A",
+          passcodeDigit: "2",
+          weight: 1,
+          explanation: "Polystyrene (PS) là chất dẻo cứng, trong suốt được điều chế bằng phản ứng trùng hợp styrene ($C_6H_5-CH=CH_2$)."
+        },
+        {
+          id: 8,
+          question: "Chất nào sau đây được dùng làm chất dẻo gọi là 'thủy tinh hữu cơ Plexiglas'?",
+          options: ["Poly(vinyl acetate)", "Poly(methyl methacrylate)", "Poly(ethylene terephthalate)", "Polystyrene"],
+          correct: 1, // B
+          decodeChar: "B",
+          passcodeDigit: "6",
+          weight: 1,
+          explanation: "Poly(methyl methacrylate) (PMM) là chất dẻo trong suốt cho ánh sáng truyền qua tốt, dùng chế tạo thủy tinh hữu cơ."
+        }
+      ]
+    };
+
+    /* APP STATE */
+    let appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    let gameState = {
+      answers: {}, // questionIdx -> selectedChoice (0..3)
+      unlockedBlocks: {}, // questionIdx -> boolean
+      matrixFoundCells: {}, // questionIdx -> Set of cell indexes (0..34)
+      isSubmitted: false
+    };
+
+    /* Initialize Application */
+    window.onload = function() {
+      loadSavedConfig();
+      initGameState();
+      renderApp();
+      setupDocxImporter();
+    };
+
+    /* Save & Load Configurations from LocalStorage */
+    function loadSavedConfig() {
+      const saved = localStorage.getItem("giai_ma_mat_ma_config");
+      if (saved) {
+        try {
+          appConfig = JSON.parse(saved);
+        } catch(e) {
+          console.error("Lỗi đọc cấu hình saved", e);
+        }
+      }
+    }
+
+    function saveConfigToStorage() {
+      localStorage.setItem("giai_ma_mat_ma_config", JSON.stringify(appConfig));
+    }
+
+    function initGameState() {
+      gameState = {
+        answers: {},
+        unlockedBlocks: {},
+        matrixFoundCells: {},
+        isSubmitted: false
+      };
+      appConfig.questions.forEach((q, idx) => {
+        gameState.matrixFoundCells[idx] = new Set();
+      });
+    }
+
+    /* Update CSS Variable for Theme Color */
+    function updateThemeColor(colorHex) {
+      appConfig.themeColor = colorHex;
+      document.documentElement.style.setProperty('--theme-color', colorHex);
+      const colorInput = document.getElementById("editThemeColor");
+      if (colorInput) colorInput.value = colorHex;
+      renderApp();
+    }
+
+    /* Primary Render Function */
+    function renderApp() {
+      // 1. Update Header Title & Topic
+      document.getElementById("sheetTitleDisplay").innerText = appConfig.sheetTitle || "🔐 GIẢI MÃ MẬT MÃ";
+      document.getElementById("editSheetTitle").value = appConfig.sheetTitle || "";
+      document.documentElement.style.setProperty('--theme-color', appConfig.themeColor || "#f5c542");
+
+      renderPasscodeSlots();
+      renderQuestions();
+      renderMatrixBlocks();
+      renderKaTeX();
+    }
+
+    /* Render Top Passcode Progress Slots */
+    function renderPasscodeSlots() {
+      const container = document.getElementById("passcodeSlotsContainer");
+      container.innerHTML = "";
+      
+      let completedCount = 0;
+      appConfig.questions.forEach((q, idx) => {
+        const isBlockCompleted = checkBlockCompleted(idx);
+        if (isBlockCompleted) completedCount++;
+
+        const slot = document.createElement("div");
+        slot.className = `w-9 h-12 sm:w-11 sm:h-14 rounded-lg flex items-center justify-center text-xl sm:text-2xl font-black transition-all border-2 ${
+          isBlockCompleted 
+            ? "border-amber-400 text-slate-900 shadow-lg scale-105" 
+            : "border-slate-700 bg-slate-800/80 text-slate-600"
+        }`;
+        
+        if (isBlockCompleted) {
+          slot.style.backgroundColor = "var(--theme-color)";
+          slot.innerText = q.passcodeDigit;
+        } else {
+          slot.innerText = "?";
+        }
+        container.appendChild(slot);
+      });
+
+      document.getElementById("passcodeProgressText").innerText = `(${completedCount}/${appConfig.questions.length} CHỮ SỐ MẬT MÃ)`;
+      
+      // Update unlocked blocks counter badge
+      const unlockedCount = Object.keys(gameState.unlockedBlocks).filter(k => gameState.unlockedBlocks[k]).length;
+      document.getElementById("blocksStatus").innerText = `${unlockedCount}/${appConfig.questions.length} đã mở`;
+
+      // Check if ALL blocks completed to show Banner
+      const congratsBanner = document.getElementById("congratsBanner");
+      if (completedCount === appConfig.questions.length && appConfig.questions.length > 0) {
+        congratsBanner.classList.remove("hidden");
+        const fullCode = appConfig.questions.map(q => q.passcodeDigit).join("");
+        // Group as 2-2-4 format if 8 digits
+        if (fullCode.length === 8) {
+          document.getElementById("finalPasscodeDisplay").innerText = `${fullCode.substring(0,2)} ${fullCode.substring(2,4)} ${fullCode.substring(4)}`;
+        } else {
+          document.getElementById("finalPasscodeDisplay").innerText = fullCode;
+        }
+      } else {
+        congratsBanner.classList.add("hidden");
+      }
+    }
+
+    /* Check if a specific Matrix Block has found all target cells */
+    function checkBlockCompleted(qIdx) {
+      if (!gameState.unlockedBlocks[qIdx]) return false;
+      const targetIndices = getTargetCellIndices(qIdx);
+      const foundSet = gameState.matrixFoundCells[qIdx] || new Set();
+      return targetIndices.every(idx => foundSet.has(idx));
+    }
+
+    /* Render Question Cards */
+    function renderQuestions() {
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+
+      appConfig.questions.forEach((q, idx) => {
+        const card = document.createElement("div");
+        const borderClass = `card-border-${idx % 8}`;
+        card.className = `print-question-card bg-white rounded-xl p-4 border-t-4 ${borderClass} border-x border-b border-slate-200 shadow-sm transition hover:shadow-md`;
+
+        const isAnswered = gameState.answers[idx] !== undefined;
+        const selectedChoice = gameState.answers[idx];
+        const isCorrect = selectedChoice === q.correct;
+
+        let statusBadge = "";
+        if (isAnswered) {
+          if (isCorrect) {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-700">✓ ĐÚNG — KHỐI MỞ</span>`;
+          } else {
+            statusBadge = `<span class="px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-700">✗ SAI — KHỐI KHÓA</span>`;
+          }
+        }
+
+        const labels = ["A", "B", "C", "D"];
+        const optionsHtml = q.options.map((opt, oIdx) => {
+          let btnStyle = "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200";
+          if (isAnswered) {
+            if (oIdx === selectedChoice) {
+              btnStyle = isCorrect 
+                ? "bg-emerald-600 text-white font-bold border-emerald-600 shadow-md" 
+                : "bg-rose-600 text-white font-bold border-rose-600 shadow-md";
+            } else {
+              btnStyle = "bg-slate-100 text-slate-400 border-slate-200 opacity-60";
+            }
+          }
+
+          return `
+            <button 
+              onclick="selectAnswer(${idx}, ${oIdx})" 
+              ${isAnswered ? 'disabled' : ''}
+              class="w-full text-left px-3 py-2.5 rounded-lg border text-xs sm:text-sm transition flex items-start gap-2.5 ${btnStyle} katex-nowrap">
+              <span class="font-bold shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs ${isAnswered && oIdx === selectedChoice ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}">${labels[oIdx]}</span>
+              <span class="pt-0.5">${opt}</span>
+            </button>
+          `;
+        }).join("");
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="font-extrabold text-xs text-slate-500 uppercase tracking-wider">CÂU ${idx + 1} (${q.weight}đ)</span>
+            ${statusBadge}
+          </div>
+          <div class="font-semibold text-slate-800 text-sm sm:text-base mb-3 katex-nowrap leading-relaxed">
+            ${q.question}
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            ${optionsHtml}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    /* Handle Answer Choice */
+    function selectAnswer(qIdx, choiceIdx) {
+      if (gameState.answers[qIdx] !== undefined) return;
+
+      gameState.answers[qIdx] = choiceIdx;
+      const q = appConfig.questions[qIdx];
+      
+      if (choiceIdx === q.correct) {
+        gameState.unlockedBlocks[qIdx] = true;
+      } else {
+        gameState.unlockedBlocks[qIdx] = false;
+      }
+
+      renderPasscodeSlots();
+      renderQuestions();
+      renderMatrixBlocks();
+      renderKaTeX();
+
+      // Tự động cuộn mượt xuống khối chữ tương ứng khi trả lời đúng
+      if (choiceIdx === q.correct) {
+        setTimeout(() => {
+          const matrixBlocks = document.querySelectorAll("#matrixBlocksContainer .print-block-item");
+          if (matrixBlocks[qIdx]) {
+            matrixBlocks[qIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Thêm hiệu ứng nháy sáng viền để gây chú ý cho học sinh
+            matrixBlocks[qIdx].classList.add("ring-4", "ring-amber-400", "scale-105");
+            setTimeout(() => {
+              matrixBlocks[qIdx].classList.remove("scale-105");
+            }, 300);
+          }
+        }, 100);
+      }
+    }
+
+    /* Helper: Calculate target cells for a given digit pattern (0..34) */
+    function getTargetCellIndices(qIdx) {
+      const digit = appConfig.questions[qIdx].passcodeDigit;
+      const pattern = DIGIT_PATTERNS[digit] || DIGIT_PATTERNS['0'];
+      const targets = [];
+      let cellIdx = 0;
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 5; c++) {
+          if (pattern[r][c] === '1') {
+            targets.push(cellIdx);
+          }
+          cellIdx++;
+        }
+      }
+      return targets;
+    }
+
+    /* Generate Matrix Character Grid for a Question Block */
+    function generateBlockGridCells(qIdx) {
+      const q = appConfig.questions[qIdx];
+      const decodeChar = q.decodeChar || "A";
+      const digit = q.passcodeDigit || "0";
+      const pattern = DIGIT_PATTERNS[digit] || DIGIT_PATTERNS['0'];
+
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace(decodeChar, "");
+      const cells = [];
+
+      let cellIdx = 0;
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 5; c++) {
+          const isTarget = pattern[r][c] === '1';
+          let charVal = "";
+          if (isTarget) {
+            charVal = decodeChar;
+          } else {
+            // Pick random letter excluding decodeChar
+            const randIdx = Math.floor(Math.abs(Math.sin(qIdx * 35 + cellIdx)) * letters.length);
+            charVal = letters[randIdx % letters.length];
+          }
+
+          cells.push({
+            idx: cellIdx,
+            char: charVal,
+            isTarget: isTarget
+          });
+          cellIdx++;
+        }
+      }
+
+      return cells;
+    }
+
+    /* Render 8 Matrix Blocks */
+    function renderMatrixBlocks() {
+      const container = document.getElementById("matrixBlocksContainer");
+      container.innerHTML = "";
+
+      appConfig.questions.forEach((q, idx) => {
+        const isUnlocked = !!gameState.unlockedBlocks[idx];
+        const isCompleted = checkBlockCompleted(idx);
+        const targetIndices = getTargetCellIndices(idx);
+        const totalTarget = targetIndices.length;
+        
+        const foundSet = gameState.matrixFoundCells[idx] || new Set();
+        const foundCount = targetIndices.filter(i => foundSet.has(i)).length;
+
+        const block = document.createElement("div");
+        block.className = `print-block-item bg-white rounded-xl p-3 border border-slate-200 shadow-sm relative transition ${
+          isUnlocked ? 'border-amber-400 ring-2 ring-amber-400/20' : 'opacity-70'
+        }`;
+
+        const gridCells = generateBlockGridCells(idx);
+        const gridHtml = gridCells.map(cell => {
+          const isFound = foundSet.has(cell.idx);
+          let cellStateClass = "";
+          if (!isUnlocked) {
+            cellStateClass = "locked-cell";
+          } else if (isFound) {
+            cellStateClass = "found-cell";
+          }
+
+          return `
+            <div 
+              onclick="clickGridCell(${idx}, ${cell.idx}, ${cell.isTarget})"
+              class="grid-cell ${cellStateClass}">
+              ${cell.char}
+            </div>
+          `;
+        }).join("");
+
+        block.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700">Khối ${idx + 1}</span>
+            <span class="text-[11px] font-semibold text-slate-500">
+              ${isUnlocked ? `Tìm chữ <strong class="text-amber-600">${q.decodeChar}</strong>: ${foundCount}/${totalTarget}` : '🔒 Chưa mở'}
+            </span>
+          </div>
+
+          <div class="digit-grid mb-2">
+            ${gridHtml}
+          </div>
+
+          ${isCompleted ? `
+            <div class="text-center pt-1 border-t border-slate-100 animate-fade-in">
+              <span class="text-xs text-slate-400 font-semibold uppercase">Chữ số mật mã:</span>
+              <span class="ml-2 font-black text-xl text-amber-500">${q.passcodeDigit}</span>
+            </div>
+          ` : ''}
+        `;
+
+        container.appendChild(block);
+      });
+    }
+
+    /* Handle Click on Matrix Cell */
+    function clickGridCell(qIdx, cellIdx, isTarget) {
+      if (!gameState.unlockedBlocks[qIdx]) return; // Block locked
+
+      const foundSet = gameState.matrixFoundCells[qIdx] || new Set();
+      if (isTarget) {
+        foundSet.add(cellIdx);
+        gameState.matrixFoundCells[qIdx] = foundSet;
+        renderPasscodeSlots();
+        renderMatrixBlocks();
+      } else {
+        // Background cell clicked: no penalty, ignores action
+      }
+    }
+
+    /* Render KaTeX Chemistry & Math Equations */
+    function renderKaTeX() {
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: "$", right: "$", display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    /* 6. SUBMIT QUIZ & SHOW RESULTS */
+    function submitQuiz() {
+      gameState.isSubmitted = true;
+      const studentName = document.getElementById("studentName").value.trim() || "Học sinh";
+      const studentClass = document.getElementById("studentClass").value.trim() || "Tự do";
+
+      document.getElementById("resultStudentInfo").innerText = `Học sinh: ${studentName} | Lớp: ${studentClass}`;
+
+      let totalWeight = 0;
+      let earnedWeight = 0;
+      const wrongQuestions = [];
+
+      appConfig.questions.forEach((q, idx) => {
+        const weight = parseFloat(q.weight) || 1;
+        totalWeight += weight;
+
+        const userAns = gameState.answers[idx];
+        if (userAns === q.correct) {
+          earnedWeight += weight;
+        } else {
+          wrongQuestions.push({
+            qIdx: idx,
+            q: q,
+            userAns: userAns
+          });
+        }
+      });
+
+      const finalScore = totalWeight > 0 ? ((earnedWeight / totalWeight) * 10).toFixed(1) : 0;
+      document.getElementById("finalScoreDisplay").innerText = `${finalScore} / 10`;
+
+      // Render Wrong Questions List
+      const listContainer = document.getElementById("wrongQuestionsList");
+      listContainer.innerHTML = "";
+
+      if (wrongQuestions.length === 0) {
+        listContainer.innerHTML = `
+          <div class="p-4 bg-emerald-50 text-emerald-800 rounded-xl text-sm font-semibold border border-emerald-100">
+            🎉 Tuyệt vời! Bạn đã trả lời đúng tất cả các câu hỏi.
+          </div>
+        `;
+      } else {
+        const labels = ["A", "B", "C", "D"];
+        wrongQuestions.forEach(item => {
+          const q = item.q;
+          const userChoiceText = item.userAns !== undefined ? `${labels[item.userAns]}. ${q.options[item.userAns]}` : "Chưa trả lời";
+          const correctChoiceText = `${labels[q.correct]}. ${q.options[q.correct]}`;
+
+          const div = document.createElement("div");
+          div.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm";
+          div.innerHTML = `
+            <div class="font-bold text-slate-800 mb-1">Câu ${item.qIdx + 1}: ${q.question}</div>
+            <div class="text-rose-600 mb-1">❌ Đáp án bạn chọn: <strong>${userChoiceText}</strong></div>
+            <div class="text-emerald-700 font-semibold mb-2">✓ Đáp án đúng: <strong>${correctChoiceText}</strong></div>
+            <div class="bg-white p-2.5 rounded-lg border border-slate-200 text-slate-600 italic">
+              <strong>Lời giải thích:</strong> ${q.explanation || "Không có giải thích."}
+            </div>
+          `;
+          listContainer.appendChild(div);
+        });
+      }
+
+      document.getElementById("resultsSection").classList.remove("hidden");
+      document.getElementById("resultsSection").scrollIntoView({ behavior: 'smooth' });
+      renderKaTeX();
+    }
+
+    /* Reset Game State */
+    function resetGame() {
+      initGameState();
+      document.getElementById("resultsSection").classList.add("hidden");
+      renderApp();
+    }
+
+    /* ==========================================================================
+       4. PHẦN SOẠN ĐỀ (DÀNH CHO GIÁO VIÊN)
+       ========================================================================== */
+    function toggleTeacherPanel() {
+      const panel = document.getElementById("teacherPanel");
+      if (panel.classList.contains("hidden")) {
+        panel.classList.remove("hidden");
+        renderEditorQuestionsList();
+      } else {
+        panel.classList.add("hidden");
+      }
+    }
+
+    function renderEditorQuestionsList() {
+      const container = document.getElementById("editorQuestionsList");
+      container.innerHTML = "";
+
+      appConfig.questions.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3";
+
+        const labels = ["A", "B", "C", "D"];
+        const correctOptionsHtml = labels.map((l, oIdx) => `
+          <option value="${oIdx}" ${q.correct === oIdx ? 'selected' : ''}>Đáp án ${l}</option>
+        `).join("");
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between font-bold text-xs text-slate-700 border-b pb-2">
+            <span>Câu hỏi số ${idx + 1}</span>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nội dung câu hỏi (KaTeX dạng $...$)</label>
+            <textarea id="eq_q_${idx}" rows="2" class="w-full px-3 py-1.5 border rounded-lg text-xs">${q.question}</textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Đáp án A</label>
+              <input type="text" id="eq_opt_A_${idx}" value="${q.options[0]}" class="w-full px-2 py-1 border rounded text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Đáp án B</label>
+              <input type="text" id="eq_opt_B_${idx}" value="${q.options[1]}" class="w-full px-2 py-1 border rounded text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Đáp án C</label>
+              <input type="text" id="eq_opt_C_${idx}" value="${q.options[2]}" class="w-full px-2 py-1 border rounded text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Đáp án D</label>
+              <input type="text" id="eq_opt_D_${idx}" value="${q.options[3]}" class="w-full px-2 py-1 border rounded text-xs">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Đáp án đúng</label>
+              <select id="eq_correct_${idx}" class="w-full px-2 py-1 border rounded text-xs font-bold text-indigo-700">
+                ${correctOptionsHtml}
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Chữ giải mã (1 ký tự)</label>
+              <input type="text" maxlength="1" id="eq_char_${idx}" value="${q.decodeChar}" class="w-full px-2 py-1 border rounded text-xs text-center font-bold uppercase">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Chữ số mật mã (0-9)</label>
+              <input type="text" maxlength="1" id="eq_digit_${idx}" value="${q.passcodeDigit}" class="w-full px-2 py-1 border rounded text-xs text-center font-bold text-amber-600">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Trọng số (điểm)</label>
+              <input type="number" step="0.5" min="0.1" id="eq_weight_${idx}" value="${q.weight}" class="w-full px-2 py-1 border rounded text-xs text-center">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Lời giải thích ngắn</label>
+            <input type="text" id="eq_exp_${idx}" value="${q.explanation || ''}" class="w-full px-2 py-1 border rounded text-xs text-slate-600">
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function saveTeacherEdits() {
+      appConfig.sheetTitle = document.getElementById("editSheetTitle").value.trim() || "🔐 GIẢI MÃ MẬT MÃ";
+      
+      appConfig.questions.forEach((q, idx) => {
+        q.question = document.getElementById(`eq_q_${idx}`).value;
+        q.options[0] = document.getElementById(`eq_opt_A_${idx}`).value;
+        q.options[1] = document.getElementById(`eq_opt_B_${idx}`).value;
+        q.options[2] = document.getElementById(`eq_opt_C_${idx}`).value;
+        q.options[3] = document.getElementById(`eq_opt_D_${idx}`).value;
+        q.correct = parseInt(document.getElementById(`eq_correct_${idx}`).value);
+        q.decodeChar = (document.getElementById(`eq_char_${idx}`).value || "A").toUpperCase();
+        q.passcodeDigit = document.getElementById(`eq_digit_${idx}`).value || "0";
+        q.weight = parseFloat(document.getElementById(`eq_weight_${idx}`).value) || 1;
+        q.explanation = document.getElementById(`eq_exp_${idx}`).value;
+      });
+
+      saveConfigToStorage();
+      resetGame();
+      toggleTeacherPanel();
+    }
+
+    function restoreDefaultData() {
+      appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      saveConfigToStorage();
+      resetGame();
+      renderEditorQuestionsList();
+    }
+
+    /* Import Word (.docx) Using Mammoth.js */
+    function setupDocxImporter() {
+      const fileInput = document.getElementById("docxFileInput");
+      fileInput.addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(loadEvent) {
+          const arrayBuffer = loadEvent.target.result;
+          mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+            .then(function(result) {
+              const text = result.value;
+              parseDocxText(text);
+            })
+            .catch(function(err) {
+              alert("Lỗi khi đọc file Word: " + err.message);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function parseDocxText(fullText) {
+      // Split text into blocks by "Câu 1:", "Câu 2:"
+      const questionBlocks = fullText.split(/Câu\s+\d+[:\.]/i).filter(b => b.trim().length > 0);
+      const parsedQuestions = [];
+      let missingAnswerCount = 0;
+
+      questionBlocks.forEach((block, idx) => {
+        if (idx >= 8) return; // Limit to 8 questions standard
+
+        let lines = block.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+        
+        let qText = "";
+        let options = ["", "", "", ""];
+        let correctIdx = 0;
+        let foundAnswer = false;
+
+        // Find answer line like "Đáp án: A"
+        let ansMatch = block.match(/Đáp\s+án\s*[:\=]\s*([A-D])/i);
+        if (ansMatch) {
+          const char = ansMatch[1].toUpperCase();
+          correctIdx = ["A", "B", "C", "D"].indexOf(char);
+          foundAnswer = true;
+        } else {
+          missingAnswerCount++;
+        }
+
+        // Parse Question and Options A, B, C, D
+        let currentPart = "question";
+        lines.forEach(line => {
+          if (line.match(/^Đáp\s+án/i)) return;
+
+          // Check if line contains A. B. C. D.
+          const optAMatch = line.match(/A[\.\)]\s*(.*)/);
+          const optBMatch = line.match(/B[\.\)]\s*(.*)/);
+          const optCMatch = line.match(/C[\.\)]\s*(.*)/);
+          const optDMatch = line.match(/D[\.\)]\s*(.*)/);
+
+          if (optAMatch) {
+            options[0] = optAMatch[1];
+          } else if (optBMatch) {
+            options[1] = optBMatch[1];
+          } else if (optCMatch) {
+            options[2] = optCMatch[1];
+          } else if (optDMatch) {
+            options[3] = optDMatch[1];
+          } else if (options[0] === "") {
+            qText += " " + line;
+          }
+        });
+
+        // Convert simple subscript/superscript like H2SO4 into $H_2SO_4$ if needed
+        qText = convertWordFormulas(qText);
+        options = options.map(o => convertWordFormulas(o));
+
+        const labels = ["A", "B", "C", "D"];
+        parsedQuestions.push({
+          id: idx + 1,
+          question: qText.trim() || `Câu hỏi ${idx + 1}`,
+          options: options,
+          correct: correctIdx,
+          decodeChar: labels[correctIdx],
+          passcodeDigit: (idx % 10).toString(),
+          weight: 1,
+          explanation: "Được nhập tự động từ file Word."
+        });
+      });
+
+      if (parsedQuestions.length > 0) {
+        appConfig.questions = parsedQuestions;
+        const notice = document.getElementById("docxNotice");
+        notice.classList.remove("hidden");
+        notice.innerText = `✓ Đã nhập thành công ${parsedQuestions.length} câu hỏi.${missingAnswerCount > 0 ? ` Có ${missingAnswerCount} câu thiếu dòng 'Đáp án:' đã được mặc định chọn A.` : ''}`;
+        renderEditorQuestionsList();
+      } else {
+        alert("Không tìm thấy cấu trúc câu hỏi hợp lệ (Ví dụ 'Câu 1:', 'A. ...', 'Đáp án: A') trong file!");
+      }
+    }
+
+    function convertWordFormulas(str) {
+      // Basic regex replacement for subscripts like x^2 or H_2O
+      return str.replace(/\^([0-9a-zA-Z+-]+)/g, "^{$1}").replace(/_([0-9a-zA-Z+-]+)/g, "_{$1}");
+    }
+
+    /* Export Clean HTML File for Students (Hides Teacher Panel Trigger & Code) */
+    function exportStudentHTML() {
+      // First save current edits
+      appConfig.sheetTitle = document.getElementById("editSheetTitle").value.trim() || "🔐 GIẢI MÃ MẬT MÃ";
+      saveConfigToStorage();
+
+      let htmlContent = document.documentElement.outerHTML;
+
+      // Inject the current appConfig into the HTML string as default fallback
+      const configJson = JSON.stringify(appConfig);
+      htmlContent = htmlContent.replace(/const DEFAULT_CONFIG = \{[\s\S]*?\};/, `const DEFAULT_CONFIG = ${configJson};`);
+
+      // Hide/Remove Teacher Panel Button from student exported file
+      htmlContent = htmlContent.replace(/id="teacherPanelToggleBtn"/g, 'id="teacherPanelToggleBtn" style="display:none !important;"');
+      htmlContent = htmlContent.replace(/id="teacherPanel"/g, 'id="teacherPanel" style="display:none !important;"');
+
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `GiaiMaMatMa_${(appConfig.sheetTitle).replace(/[^a-zA-Z0-9]/g, "_")}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
